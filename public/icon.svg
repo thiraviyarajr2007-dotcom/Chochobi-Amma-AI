@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C2185B"/>
+      <stop offset="100%" stop-color="#880E4F"/>
+    </linearGradient>
+    <radialGradient id="turmericGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFCA28" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#FF8F00" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Outer Rounded Shield / Circle -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <circle cx="256" cy="240" r="190" fill="#FFF8EC"/>
+  
+  <!-- Kolam Accent Border Dots -->
+  <circle cx="256" cy="70" r="6" fill="#FFB300"/>
+  <circle cx="256" cy="410" r="6" fill="#FFB300"/>
+  <circle cx="86" cy="240" r="6" fill="#FFB300"/>
+  <circle cx="426" cy="240" r="6" fill="#FFB300"/>
+  
+  <!-- Amma Hair Bun -->
+  <ellipse cx="256" cy="170" rx="95" ry="90" fill="#2E1C14"/>
+  <circle cx="340" cy="180" r="32" fill="#2E1C14"/>
+  <!-- Jasmine Flowers (Malli poo) on Bun -->
+  <circle cx="330" cy="155" r="9" fill="#FFFDE7"/>
+  <circle cx="346" cy="162" r="8" fill="#FFFFFF"/>
+  <circle cx="355" cy="178" r="9" fill="#FFFDE7"/>
+  <circle cx="348" cy="195" r="8" fill="#FFFFFF"/>
+  
+  <!-- Amma Face -->
+  <circle cx="256" cy="225" r="75" fill="#F4BA85"/>
+  
+  <!-- Saree Pallu & Blouse (Traditional kumkum & gold border) -->
+  <path d="M165 315 C190 285, 322 285, 347 315 C370 345, 385 410, 385 430 L127 430 C127 410, 142 345, 165 315 Z" fill="#C2185B"/>
+  <path d="M190 300 Q256 340 322 300" stroke="#FFB300" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <!-- Mangalsutra / Chain with gold coin pendant -->
+  <path d="M220 300 Q256 345 292 300" stroke="#FFB300" stroke-width="4" fill="none"/>
+  <circle cx="256" cy="340" r="10" fill="#FFB300"/>
+
+  <!-- Warm Caring Eyes -->
+  <ellipse cx="230" cy="218" rx="8" ry="11" fill="#2E1C14"/>
+  <ellipse cx="282" cy="218" rx="8" ry="11" fill="#2E1C14"/>
+  <circle cx="233" cy="214" r="3.5" fill="#FFFFFF"/>
+  <circle cx="285" cy="214" r="3.5" fill="#FFFFFF"/>
+  
+  <!-- Gentle Eyebrows -->
+  <path d="M220 203 Q232 196 244 203" stroke="#2E1C14" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <path d="M268 203 Q280 196 292 203" stroke="#2E1C14" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Vermillion Bindi (Kumkum Pottu) -->
+  <circle cx="256" cy="195" r="7" fill="#C2185B"/>
+
+  <!-- Friendly Nose Pin (Mookuthi) -->
+  <circle cx="265" cy="235" r="3" fill="#FFB300"/>
+
+  <!-- Warm Caring Smile -->
+  <path d="M236 246 Q256 268 276 246" stroke="#C2185B" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Rosy Cheeks -->
+  <circle cx="218" cy="236" r="9" fill="#FF8A80" opacity="0.4"/>
+  <circle cx="294" cy="236" r="9" fill="#FF8A80" opacity="0.4"/>
+
+  <!-- Chocobi Biscuit Badge at Bottom Right -->
+  <g transform="translate(320, 310)">
+    <circle cx="36" cy="36" r="42" fill="#FFFFFF" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.15))"/>
+    <circle cx="36" cy="36" r="36" fill="#8D6E63"/>
+    <circle cx="36" cy="36" r="30" fill="#6D4C41"/>
+    <!-- Biscuit crimp pattern & chocolate chips -->
+    <circle cx="26" cy="26" r="4" fill="#3E2723"/>
+    <circle cx="46" cy="26" r="4" fill="#3E2723"/>
+    <circle cx="36" cy="46" r="4" fill="#3E2723"/>
+    <circle cx="25" cy="42" r="3" fill="#3E2723"/>
+    <circle cx="47" cy="42" r="3" fill="#3E2723"/>
+  </g>
+</svg>
+

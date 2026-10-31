@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ta">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Chocobi Amma AI | குடும்ப நிதி காப்பாளர் - Family Finance Guardian</title>
+    
+    <!-- SEO & Metadata -->
+    <meta name="description" content="அம்மாவுக்கான அன்பான குடும்ப நிதி காப்பாளர் - குரல் வழி செலவு பதிவு, பில் ஸ்கேன், மோசடி தடுப்பு மற்றும் குழந்தைகள் சேமிப்பு." />
+    <meta name="keywords" content="Chocobi Amma, Tamil Finance AI, Family Expense Tracker, Scam Shield Tamil, Voice Expense Tamil" />
+    <meta name="author" content="Chocobi Amma AI" />
+
+    <!-- OpenGraph Social Sharing -->
+    <meta property="og:title" content="Chocobi Amma AI - குடும்ப நிதி காப்பாளர்" />
+    <meta property="og:description" content="Friendly family finance guardian for Tamil mothers. Track expenses by voice, scan bills, protect against SMS scams, and teach kids saving." />
+    <meta property="og:image" content="/icon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://chocobi-amma-ai.vercel.app" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Chocobi Amma AI - குடும்ப நிதி காப்பாளர்" />
+    <meta name="twitter:description" content="Friendly family finance guardian for Tamil mothers with Voice Entry and Scam Shield." />
+    <meta name="twitter:image" content="/icon.svg" />
+
+    <!-- PWA & Mobile Web App Meta -->
+    <meta name="theme-color" content="#C2185B" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Chocobi Amma" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+
+    <!-- Google Fonts: Noto Sans Tamil & Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-[#FFF8EC] text-[#3E2723] antialiased selection:bg-[#FCE4EC] selection:text-[#880E4F] min-h-screen">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Service Worker Registration for PWA installability
+      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.log('SW registration skipped:', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

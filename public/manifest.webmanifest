@@ -1,0 +1,42 @@
+{
+  "name": "Chocobi Amma AI - குடும்ப நிதி காப்பாளர்",
+  "short_name": "Chocobi Amma",
+  "description": "அம்மாவுக்கான அன்பான குடும்ப நிதி காப்பாளர் - குரல் வழி செலவு பதிவு, மோசடி தடுப்பு, குழந்தைகள் சேமிப்பு",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8EC",
+  "theme_color": "#C2185B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Speak to add / பேசி சேர்க்க",
+      "short_name": "Add Expense",
+      "description": "Speak to record an expense with voice",
+      "url": "/add?mode=voice",
+      "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Scam Shield / மோசடி தடுப்பு",
+      "short_name": "Scam Shield",
+      "description": "Scan suspicious SMS or WhatsApp message",
+      "url": "/scam-shield",
+      "icons": [{ "src": "/icon.svg", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["finance", "productivity", "family"],
+  "lang": "ta"
+}
