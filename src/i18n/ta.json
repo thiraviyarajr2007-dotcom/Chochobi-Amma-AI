@@ -326,5 +326,33 @@
     "typography": "எழுத்து வடிவங்கள் (Typography)",
     "components": "மறுபயன்பாட்டுக் கூறுகள் (Components)",
     "mascotStates": "சோகோபி அம்மா உணர்ச்சிகள் (Mascot States)"
+  },
+  "auth": {
+    "title": "அம்மா கணக்கு உள்நுழைவு",
+    "subtitle": "உங்கள் குடும்ப நிதி தரவுகளைப் பாதுகாக்க கணக்கை இணைக்கவும்",
+    "googleSignIn": "Google மூலம் உள்நுழைக",
+    "facebookSignIn": "Facebook மூலம் உள்நுழைக",
+    "emailSignIn": "மின்னஞ்சல் மூலம் உள்நுழைக",
+    "emailSignUp": "புதிய கணக்கு தொடங்குக",
+    "emailLabel": "மின்னஞ்சல் முகவரி",
+    "emailPlaceholder": "example@gmail.com",
+    "passwordLabel": "கடவுச்சொல்",
+    "passwordPlaceholder": "குறைந்தது 6 எழுத்துக்கள்",
+    "nameLabel": "உங்கள் பெயர்",
+    "namePlaceholder": "உதா: பிரியா அம்மா",
+    "signIn": "உள்நுழைக",
+    "signUp": "பதிவு செய்க",
+    "or": "அல்லது",
+    "continueGuest": "உள்ளூர் பயன்முறை (கணக்கின்றி தொடரவும்)",
+    "guestDesc": "100% உங்கள் மொபைலில் மட்டுமே பாதுகாப்பாக சேமிக்கப்படும்",
+    "alreadyHaveAccount": "ஏற்கனவே கணக்கு உள்ளதா? உள்நுழைக",
+    "dontHaveAccount": "புதிய கணக்கு தொடங்க வேண்டுமா? பதிவு செய்க",
+    "loginSuccess": "வெற்றிகரமாக உள்நுழைந்துள்ளீர்கள்!",
+    "logoutSuccess": "வெற்றிகரமாக வெளியேறிவிட்டீர்கள்!",
+    "accountDetails": "அம்மா கணக்கு விவரங்கள்",
+    "connectedWith": "இணைக்கப்பட்டுள்ளது:",
+    "signOut": "வெளியேறு (Sign Out)",
+    "notConnected": "கணக்கு இணைக்கப்படவில்லை (உள்ளூர் பயன்முறை)",
+    "connectPrompt": "Google அல்லது Facebook மூலம் இணைத்து எளிதாக மீட்டெடுக்கலாம்"
   }
 }

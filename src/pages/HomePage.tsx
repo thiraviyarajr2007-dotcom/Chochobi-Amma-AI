@@ -24,9 +24,11 @@ import {
   detectExpenseSpikes,
 } from '../lib/budgetAnalytics';
 import { ExpenseItem } from '../types';
+import { useUserAuth } from '../lib/userAuthContext';
 
 export const HomePage: React.FC = () => {
   const { t, formatRupee } = useI18n();
+  const { user } = useUserAuth();
   const navigate = useNavigate();
 
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
@@ -60,7 +62,7 @@ export const HomePage: React.FC = () => {
       <div className="flex items-center justify-between pt-1">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black text-warmBrown tracking-tight flex items-center gap-2">
-            {t('home.greeting')}
+            {user?.displayName ? `வணக்கம், ${user.displayName}` : t('home.greeting')}
           </h2>
           <p className="text-sm font-semibold text-warmBrown-subtle mt-0.5">
             {t('home.subtitle')}

@@ -31,12 +31,14 @@ import {
 } from '../lib/security';
 import { exportExpensesToCSV } from '../lib/budgetAnalytics';
 import { useAuthLock } from '../lib/authLockContext';
+import { useUserAuth } from '../lib/userAuthContext';
 
 export const SettingsPage: React.FC = () => {
   const { lang, setLang, t, formatRupee } = useI18n();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { lockApp, refreshPinStatus } = useAuthLock();
+  const { user } = useUserAuth();
 
   const [largeText, setLargeText] = useState<boolean>(() => {
     return document.documentElement.classList.contains('large-text');
@@ -161,6 +163,71 @@ export const SettingsPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           <span>{t('common.back')}</span>
         </button>
+
+        {/* 0. Amma Account / Firebase Integration Card */}
+        <Card variant="surface" className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-warmBrown-subtle uppercase tracking-wider flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-leafGreen" />
+              {t('auth.accountDetails')}
+            </span>
+            {user && (
+              <span className="text-[11px] font-bold text-leafGreen bg-leafGreen-light px-2 py-0.5 rounded-full uppercase">
+                {user.providerId}
+              </span>
+            )}
+          </div>
+
+          {user ? (
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-turmeric-light border border-turmeric flex items-center justify-center text-xl shadow-warm-sm overflow-hidden">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt={user.displayName || 'Amma'} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>👩</span>
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-warmBrown">{user.displayName}</h4>
+                  <span className="text-xs text-warmBrown-subtle font-medium truncate max-w-[180px] block">
+                    {user.email || t('auth.notConnected')}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate('/auth')}
+                className="px-3 py-1.5 rounded-xl bg-cream hover:bg-cream-dark text-warmBrown text-xs font-bold border border-[#EFEBE9]"
+              >
+                {t('common.edit')}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-cream-dark flex items-center justify-center text-lg">
+                  🔐
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-warmBrown block">{t('auth.notConnected')}</span>
+                  <span className="text-[11px] text-warmBrown-subtle font-medium block">
+                    {t('auth.connectPrompt')}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate('/auth')}
+                className="px-3.5 py-2 rounded-xl bg-kumkum text-white text-xs font-bold shadow-warm-sm hover:bg-kumkum-dark active:scale-95 transition-all whitespace-nowrap"
+              >
+                {t('auth.signIn')}
+              </button>
+            </div>
+          )}
+        </Card>
 
         {/* 1. Language Switcher Card */}
         <Card variant="surface" className="flex flex-col gap-3">

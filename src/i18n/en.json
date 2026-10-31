@@ -326,5 +326,33 @@
     "typography": "Typography (Noto Sans Tamil + Poppins)",
     "components": "Reusable Components",
     "mascotStates": "Chocobi Amma Mascot Moods"
+  },
+  "auth": {
+    "title": "Amma Account Login",
+    "subtitle": "Connect your account to safeguard and sync your family finance",
+    "googleSignIn": "Sign in with Google",
+    "facebookSignIn": "Sign in with Facebook",
+    "emailSignIn": "Sign in with Email",
+    "emailSignUp": "Create New Account",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "example@gmail.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Minimum 6 characters",
+    "nameLabel": "Your Name",
+    "namePlaceholder": "e.g. Priya Amma",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "or": "or",
+    "continueGuest": "Continue as Guest (Use Offline)",
+    "guestDesc": "Data stays 100% private and stored on this phone only",
+    "alreadyHaveAccount": "Already have an account? Sign In",
+    "dontHaveAccount": "Need a new account? Sign Up",
+    "loginSuccess": "Successfully signed in!",
+    "logoutSuccess": "Successfully signed out!",
+    "accountDetails": "Amma Account Profile",
+    "connectedWith": "Connected via:",
+    "signOut": "Sign Out",
+    "notConnected": "Not connected (Local Guest Mode)",
+    "connectPrompt": "Connect with Google or Facebook for easy account backup"
   }
 }

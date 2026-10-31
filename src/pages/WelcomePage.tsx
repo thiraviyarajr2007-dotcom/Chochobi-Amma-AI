@@ -149,6 +149,13 @@ export const WelcomePage: React.FC = () => {
             <Button variant="primary" onClick={handleNext} icon={<Sparkles className="w-5 h-5" />}>
               {t('splash.startBtn')}
             </Button>
+            <button
+              type="button"
+              onClick={() => navigate('/auth')}
+              className="w-full mt-3 text-center text-xs sm:text-sm font-bold text-kumkum hover:underline flex items-center justify-center gap-1.5"
+            >
+              <span>{t('auth.alreadyHaveAccount')}</span>
+            </button>
           </div>
         </>
       )}

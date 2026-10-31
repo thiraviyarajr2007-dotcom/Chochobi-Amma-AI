@@ -13,7 +13,12 @@ export const BottomNav: React.FC = () => {
   const currentPath = location.pathname;
 
   // Do not render BottomNav on auth and onboarding screens
-  if (currentPath === '/welcome' || currentPath === '/setup-pin' || currentPath === '/lock') {
+  if (
+    currentPath === '/welcome' ||
+    currentPath === '/setup-pin' ||
+    currentPath === '/lock' ||
+    currentPath === '/auth'
+  ) {
     return null;
   }
 

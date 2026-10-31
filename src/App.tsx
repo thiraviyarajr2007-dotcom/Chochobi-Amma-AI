@@ -4,6 +4,7 @@ import { I18nProvider } from './i18n/i18nContext';
 import { ToastProvider } from './components/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthLockProvider } from './lib/authLockContext';
+import { UserAuthProvider } from './lib/userAuthContext';
 import { LockGuard } from './components/LockGuard';
 import { AuthGateRedirect } from './components/AuthGateRedirect';
 import { BottomNav } from './components/BottomNav';
@@ -15,6 +16,9 @@ import { seedInitialDatabaseIfEmpty } from './lib/db';
 // Lazy-loaded route pages for performance & code splitting
 const WelcomePage = lazy(() =>
   import('./pages/WelcomePage').then((m) => ({ default: m.WelcomePage }))
+);
+const AuthPage = lazy(() =>
+  import('./pages/AuthPage').then((m) => ({ default: m.AuthPage }))
 );
 const SetupPinPage = lazy(() =>
   import('./pages/SetupPinPage').then((m) => ({ default: m.SetupPinPage }))
@@ -76,20 +80,22 @@ export function App() {
       <BrowserRouter>
         <I18nProvider>
           <ToastProvider>
-            <AuthLockProvider>
-              <ScrollToTop />
-              <OfflineBanner />
+            <UserAuthProvider>
+              <AuthLockProvider>
+                <ScrollToTop />
+                <OfflineBanner />
 
-              <div className="min-h-screen bg-[#FFF8EC] text-[#3E2723] font-sans antialiased">
-                <Suspense fallback={<PageSkeleton />}>
-                  <Routes>
-                    {/* Root Redirection Logic */}
-                    <Route path="/" element={<AuthGateRedirect />} />
+                <div className="min-h-screen bg-[#FFF8EC] text-[#3E2723] font-sans antialiased">
+                  <Suspense fallback={<PageSkeleton />}>
+                    <Routes>
+                      {/* Root Redirection Logic */}
+                      <Route path="/" element={<AuthGateRedirect />} />
 
-                    {/* Public Auth / Onboarding routes */}
-                    <Route path="/welcome" element={<WelcomePage />} />
-                    <Route path="/setup-pin" element={<SetupPinPage />} />
-                    <Route path="/lock" element={<LockPage />} />
+                      {/* Public Auth / Onboarding routes */}
+                      <Route path="/welcome" element={<WelcomePage />} />
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/setup-pin" element={<SetupPinPage />} />
+                      <Route path="/lock" element={<LockPage />} />
 
                     {/* Developer Design System (dev preview route) */}
                     <Route path="/design" element={<DesignSystemPage />} />
@@ -201,8 +207,9 @@ export function App() {
                 <BottomNav />
               </div>
             </AuthLockProvider>
-          </ToastProvider>
-        </I18nProvider>
+          </UserAuthProvider>
+        </ToastProvider>
+      </I18nProvider>
       </BrowserRouter>
     </ErrorBoundary>
   );
