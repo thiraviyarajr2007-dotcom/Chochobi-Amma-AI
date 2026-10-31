@@ -244,3 +244,40 @@ export async function askAmmaApi(params: {
     : `Amma, you have spent ₹${params.totalSpent.toLocaleString('en-IN')} this month. You still have ₹${Math.max(0, params.budget - params.totalSpent).toLocaleString('en-IN')} remaining in your budget.`;
 }
 
+export interface VoiceExpenseApiResponse {
+  transcript: string;
+  language: 'ta' | 'en' | 'mixed';
+  expenses: Array<{
+    item: string;
+    amount: number;
+    category: ExpenseCategory;
+    confidence: number;
+  }>;
+  needsClarification: boolean;
+  clarificationQuestion?: string;
+}
+
+/**
+ * 6. Voice Expense Processing (WAV Audio to Transcript + Structured Expenses)
+ */
+export async function voiceExpenseApi(
+  audioBase64: string,
+  lang: Language = 'ta',
+  mimeType: 'audio/wav' = 'audio/wav'
+): Promise<VoiceExpenseApiResponse> {
+  const response = await fetch('/api/voice-expense', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audioBase64, mimeType, lang }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    throw new Error(errorBody?.error || `Server responded with ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+

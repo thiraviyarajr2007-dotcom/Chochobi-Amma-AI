@@ -5,6 +5,7 @@ import parseExpenseHandler from './api/parse-expense.ts';
 import scanBillHandler from './api/scan-bill.ts';
 import scamCheckHandler from './api/scam-check.ts';
 import insightsHandler from './api/insights.ts';
+import voiceExpenseHandler from './api/voice-expense.ts';
 
 // Vite Dev Server Middleware for /api/* serverless endpoints
 function apiServerPlugin(): Plugin {
@@ -70,6 +71,8 @@ function apiServerPlugin(): Plugin {
             return scamCheckHandler(mockReq, mockRes);
           } else if (url === '/api/insights') {
             return insightsHandler(mockReq, mockRes);
+          } else if (url === '/api/voice-expense') {
+            return voiceExpenseHandler(mockReq, mockRes);
           }
         } catch (err: any) {
           console.error('API middleware error:', err);

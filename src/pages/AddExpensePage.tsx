@@ -5,13 +5,13 @@ import {
   FileText,
   Camera,
   Check,
-  Volume2,
   AlertCircle,
-  Edit2,
   Trash2,
-  Plus,
   Sparkles,
   ArrowLeft,
+  Square,
+  RefreshCw,
+  HelpCircle,
 } from 'lucide-react';
 import { useI18n } from '../i18n/i18nContext';
 import { Card } from '../components/Card';
@@ -22,16 +22,12 @@ import { Mascot } from '../components/Mascot';
 import { useToast } from '../components/Toast';
 import { TopBar } from '../components/TopBar';
 import { ExpenseCategory, ExpenseItem } from '../types';
-import { parseExpenseApi, scanBillApi, ParsedApiExpense } from '../lib/apiClient';
+import { scanBillApi, ParsedApiExpense } from '../lib/apiClient';
 import { compressImageClientSide } from '../lib/imageCompressor';
+import { useVoiceInput } from '../lib/audioRecorder';
 import { db } from '../lib/db';
 
 type AddTab = 'voice' | 'manual' | 'scan';
-
-interface IWindowSpeechRecognition extends Window {
-  SpeechRecognition?: any;
-  webkitSpeechRecognition?: any;
-}
 
 export const AddExpensePage: React.FC = () => {
   const { lang, t, formatRupee } = useI18n();
@@ -55,16 +51,8 @@ export const AddExpensePage: React.FC = () => {
   const [manualCategory, setManualCategory] = useState<ExpenseCategory>('groceries');
   const [manualNote, setManualNote] = useState<string>('');
 
-  // Voice recognition states
-  const [isListening, setIsListening] = useState(false);
-  const [liveTranscript, setLiveTranscript] = useState('');
-  const [voiceError, setVoiceError] = useState<string | null>(null);
-  const [speechSupported, setSpeechSupported] = useState(true);
-  const recognitionRef = useRef<any>(null);
-
   // Review & Confirmation Cards (Extracted items pending mom's approval)
   const [pendingItems, setPendingItems] = useState<ParsedApiExpense[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Scan state
   const [isScanning, setIsScanning] = useState(false);
@@ -83,105 +71,44 @@ export const AddExpensePage: React.FC = () => {
     'other',
   ];
 
-  // Initialize SpeechRecognition support check
+  // Voice Input Hook with 3-tier Fallback (Browser Web Speech -> Recorder WAV -> Manual)
+  const {
+    status: voiceStatus,
+    mode: voiceMode,
+    setMode: setVoiceMode,
+    transcript: voiceTranscript,
+    parsedExpenses: voiceParsedExpenses,
+    error: voiceError,
+    audioLevel,
+    countdown,
+    needsClarification,
+    clarificationQuestion,
+    start: startVoice,
+    stop: stopVoice,
+    reset: resetVoice,
+    isBrowserSupported,
+  } = useVoiceInput({
+    lang,
+    onParsed: (items) => {
+      setPendingItems(items);
+      showToast(
+        `${items.length} ${t('expensesList.countItems')} ${
+          lang === 'ta' ? 'கண்டறியப்பட்டது' : 'detected'
+        }`,
+        'success'
+      );
+    },
+    onError: (errMsg) => {
+      showToast(errMsg, 'warning');
+    },
+  });
+
+  // Keep pendingItems synced if voiceParsedExpenses change
   useEffect(() => {
-    const win = window as IWindowSpeechRecognition;
-    const SpeechClass = win.SpeechRecognition || win.webkitSpeechRecognition;
-    if (!SpeechClass) {
-      setSpeechSupported(false);
+    if (voiceParsedExpenses.length > 0 && activeTab === 'voice') {
+      setPendingItems(voiceParsedExpenses);
     }
-  }, []);
-
-  const handleStartVoice = () => {
-    setVoiceError(null);
-    setLiveTranscript('');
-    setPendingItems([]);
-
-    const win = window as IWindowSpeechRecognition;
-    const SpeechClass = win.SpeechRecognition || win.webkitSpeechRecognition;
-
-    if (!SpeechClass) {
-      setSpeechSupported(false);
-      setVoiceError(t('addExpense.voiceUnsupported'));
-      return;
-    }
-
-    try {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-      }
-
-      const recognition = new SpeechClass();
-      recognitionRef.current = recognition;
-      recognition.lang = lang === 'ta' ? 'ta-IN' : 'en-IN';
-      recognition.continuous = false;
-      recognition.interimResults = true;
-
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
-
-      recognition.onresult = (event: any) => {
-        let currentText = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          currentText += event.results[i][0].transcript;
-        }
-        setLiveTranscript(currentText);
-      };
-
-      recognition.onerror = (event: any) => {
-        setIsListening(false);
-        if (event.error === 'not-allowed') {
-          setVoiceError(t('addExpense.micPermissionDenied'));
-        } else if (event.error === 'no-speech') {
-          setVoiceError(t('addExpense.noSpeechDetected'));
-        } else {
-          setVoiceError(`Voice error: ${event.error}`);
-        }
-      };
-
-      recognition.onend = async () => {
-        setIsListening(false);
-        if (liveTranscript.trim()) {
-          await analyzeVoiceTranscript(liveTranscript.trim());
-        }
-      };
-
-      recognition.start();
-    } catch (err: any) {
-      setIsListening(false);
-      setVoiceError(err?.message || 'Could not start microphone');
-    }
-  };
-
-  const handleStopVoice = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-    setIsListening(false);
-  };
-
-  const analyzeVoiceTranscript = async (text: string) => {
-    setIsAnalyzing(true);
-    try {
-      const result = await parseExpenseApi(text, lang);
-      if (result.expenses && result.expenses.length > 0) {
-        setPendingItems(result.expenses);
-        showToast(
-          `${result.expenses.length} ${t('expensesList.countItems')} ${
-            lang === 'ta' ? 'கண்டறியப்பட்டது' : 'detected'
-          }`,
-          'success'
-        );
-      } else {
-        showToast(t('addExpense.noSpeechDetected'), 'warning');
-      }
-    } catch {
-      showToast(t('common.error'), 'error');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
+  }, [voiceParsedExpenses, activeTab]);
 
   // Bill Scanning
   const handleFilePicked = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,7 +134,9 @@ export const AddExpensePage: React.FC = () => {
         }));
         setPendingItems(parsedList);
         showToast(
-          `${scanResult.merchant || t('categories.groceries')} • ${formatRupee(scanResult.total || 0)}`,
+          `${scanResult.merchant || t('categories.groceries')} • ${formatRupee(
+            scanResult.total || 0
+          )}`,
           'success'
         );
       } else {
@@ -294,6 +223,23 @@ export const AddExpensePage: React.FC = () => {
     navigate(`/expenses?highlight=${id}`);
   };
 
+  // Determine Mascot Mood
+  const mascotMood =
+    voiceStatus === 'listening' ||
+    voiceStatus === 'recording' ||
+    voiceStatus === 'processing' ||
+    needsClarification ||
+    isScanning
+      ? 'thinking'
+      : pendingItems.length > 0
+      ? 'celebrate'
+      : 'happy';
+
+  // Countdown circle circumference
+  const circleRadius = 36;
+  const circleCircumference = 2 * Math.PI * circleRadius;
+  const strokeDashoffset = circleCircumference * (1 - countdown / 15);
+
   return (
     <div className="min-h-screen bg-[#FFF8EC] flex flex-col">
       <TopBar
@@ -356,73 +302,282 @@ export const AddExpensePage: React.FC = () => {
           </button>
         </div>
 
-        {/* TAB 1: VOICE ENTRY */}
+        {/* TAB 1: VOICE ENTRY WITH GEMINI AUDIO FALLBACK */}
         {activeTab === 'voice' && (
           <div className="flex flex-col gap-4">
+            {/* Status Chip & Mode Switcher */}
+            <div className="flex items-center justify-between px-1 text-xs">
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#EFEBE9] shadow-warm-xs font-bold text-warmBrown"
+                title={
+                  voiceMode === 'browser'
+                    ? t('addExpense.voiceModeBrowserDesc')
+                    : t('addExpense.voiceModeCloudDesc')
+                }
+              >
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    voiceMode === 'browser'
+                      ? 'bg-emerald-500 animate-pulse'
+                      : 'bg-blue-600 animate-pulse'
+                  }`}
+                />
+                <span>
+                  {voiceMode === 'browser'
+                    ? t('addExpense.voiceModeBrowser')
+                    : t('addExpense.voiceModeCloud')}
+                </span>
+              </div>
+
+              {isBrowserSupported && (
+                <button
+                  type="button"
+                  onClick={() => setVoiceMode(voiceMode === 'browser' ? 'cloud' : 'browser')}
+                  className="font-bold text-xs text-kumkum hover:underline hover:text-kumkum-dark transition-colors"
+                >
+                  {voiceMode === 'browser'
+                    ? t('addExpense.switchModeCloud')
+                    : t('addExpense.switchModeBrowser')}
+                </button>
+              )}
+            </div>
+
             <Card variant="surface" className="text-center py-6">
               <div className="flex flex-col items-center gap-3">
-                <Mascot mood={isListening ? 'thinking' : pendingItems.length > 0 ? 'celebrate' : 'happy'} size={110} />
+                <Mascot mood={mascotMood} size={110} />
 
-                <div className="max-w-xs">
-                  <h3 className="text-lg font-bold text-warmBrown">
-                    {isListening ? t('addExpense.listening') : t('addExpense.tapToSpeak')}
-                  </h3>
-                  <p className="text-xs text-warmBrown-subtle mt-1 font-medium">
-                    {t('addExpense.voiceInstruction')}
-                  </p>
-                </div>
-
-                {/* Big Animated Mic Button */}
-                <div className="my-3">
-                  <button
-                    type="button"
-                    onClick={isListening ? handleStopVoice : handleStartVoice}
-                    disabled={isAnalyzing}
-                    className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
-                      isListening
-                        ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse scale-105'
-                        : 'bg-gradient-to-tr from-kumkum to-kumkum-dark text-white shadow-kumkum-glow active:scale-95'
-                    }`}
-                    aria-label={isListening ? t('addExpense.stopListening') : t('addExpense.tapToSpeak')}
-                  >
-                    <Mic className={`w-10 h-10 ${isListening ? 'animate-bounce' : ''}`} />
-                  </button>
-                </div>
-
-                {/* Live Transcript Display */}
-                {liveTranscript && (
-                  <div className="w-full bg-cream rounded-2xl p-3 border border-[#EFEBE9] text-left">
-                    <span className="text-[11px] font-bold text-warmBrown-subtle uppercase">
-                      {t('addExpense.youSaid')}:
-                    </span>
-                    <p className="text-sm font-bold text-warmBrown mt-0.5">"{liveTranscript}"</p>
+                {/* State: IDLE */}
+                {voiceStatus === 'idle' && (
+                  <div className="max-w-xs">
+                    <h3 className="text-lg font-bold text-warmBrown">
+                      {t('addExpense.tapToSpeak')}
+                    </h3>
+                    <p className="text-xs text-warmBrown-subtle mt-1 font-medium">
+                      {t('addExpense.voiceInstruction')}
+                    </p>
                   </div>
                 )}
 
-                {/* Voice Error Notice */}
-                {voiceError && (
-                  <div className="w-full bg-red-50 border border-red-200 rounded-2xl p-3 text-left flex items-start gap-2.5">
-                    <AlertCircle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-bold text-danger">{voiceError}</p>
-                      <p className="text-[11px] text-warmBrown-subtle mt-0.5">
-                        {t('addExpense.micFallbackTip')}
-                      </p>
+                {/* State: LISTENING (Browser Web Speech) */}
+                {voiceStatus === 'listening' && (
+                  <div className="max-w-xs">
+                    <h3 className="text-lg font-bold text-kumkum animate-pulse">
+                      {t('addExpense.listening')}
+                    </h3>
+                    <p className="text-xs text-warmBrown-subtle mt-1 font-medium">
+                      {t('addExpense.voiceInstruction')}
+                    </p>
+                  </div>
+                )}
+
+                {/* State: RECORDING (MediaRecorder Cloud Fallback) */}
+                {voiceStatus === 'recording' && (
+                  <div className="max-w-xs flex flex-col items-center">
+                    <h3 className="text-lg font-bold text-blue-700 animate-pulse">
+                      {t('addExpense.recordingAudio')}
+                    </h3>
+                    <p className="text-xs font-bold text-warmBrown-muted mt-0.5">
+                      {t('addExpense.recordingCountdown').replace('{seconds}', String(countdown))}
+                    </p>
+                  </div>
+                )}
+
+                {/* State: PROCESSING */}
+                {voiceStatus === 'processing' && (
+                  <div className="max-w-xs flex flex-col items-center gap-1.5 py-2">
+                    <div className="flex items-center gap-2 text-kumkum font-bold text-sm">
+                      <Sparkles className="w-5 h-5 animate-spin" />
+                      <span>{t('addExpense.processingAudio')}</span>
                     </div>
                   </div>
                 )}
 
-                {/* Analyzing Spinner */}
-                {isAnalyzing && (
-                  <div className="flex items-center gap-2 text-kumkum font-bold text-sm">
-                    <Sparkles className="w-4 h-4 animate-spin" />
-                    <span>{t('addExpense.analyzing')}</span>
+                {/* Interactive Mic or Stop Button */}
+                <div className="my-2 flex flex-col items-center gap-3">
+                  {/* If Recording in Cloud mode: show countdown circle and stop button */}
+                  {voiceStatus === 'recording' ? (
+                    <div className="relative flex flex-col items-center gap-3">
+                      {/* SVG Countdown Ring */}
+                      <div className="relative w-28 h-28 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 88 88">
+                          <circle
+                            cx="44"
+                            cy="44"
+                            r={circleRadius}
+                            className="stroke-cream-dark"
+                            strokeWidth="6"
+                            fill="transparent"
+                          />
+                          <circle
+                            cx="44"
+                            cy="44"
+                            r={circleRadius}
+                            className="stroke-blue-600 transition-all duration-1000 ease-linear"
+                            strokeWidth="6"
+                            fill="transparent"
+                            strokeDasharray={circleCircumference}
+                            strokeDashoffset={strokeDashoffset}
+                            strokeLinecap="round"
+                          />
+                        </svg>
+
+                        <button
+                          type="button"
+                          onClick={stopVoice}
+                          className="absolute inset-2 m-auto w-20 h-20 rounded-full bg-danger text-white flex items-center justify-center shadow-warm-lg active:scale-95 transition-transform"
+                          aria-label={t('addExpense.stopRecording')}
+                        >
+                          <Square className="w-8 h-8 fill-current" />
+                        </button>
+                      </div>
+
+                      {/* Live Waveform Level Meter */}
+                      <div className="flex items-center justify-center gap-1.5 h-8 py-1">
+                        {[0.3, 0.6, 0.9, 1.0, 0.8, 0.5, 0.3].map((factor, idx) => {
+                          const barHeight = Math.max(
+                            6,
+                            Math.round((audioLevel * factor * 26) / 100)
+                          );
+                          return (
+                            <div
+                              key={idx}
+                              className="w-1.5 bg-gradient-to-t from-blue-600 to-turmeric rounded-full transition-all duration-75"
+                              style={{ height: `${barHeight}px` }}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      <Button
+                        variant="danger"
+                        size="md"
+                        onClick={stopVoice}
+                        icon={<Square className="w-4 h-4 fill-current" />}
+                      >
+                        {t('addExpense.stopRecording')} ({countdown}s)
+                      </Button>
+                    </div>
+                  ) : (
+                    /* Default Idle / Listening Mic Button */
+                    <button
+                      type="button"
+                      onClick={
+                        voiceStatus === 'listening'
+                          ? stopVoice
+                          : voiceStatus === 'processing'
+                          ? undefined
+                          : startVoice
+                      }
+                      disabled={voiceStatus === 'processing'}
+                      className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
+                        voiceStatus === 'listening'
+                          ? 'bg-red-600 text-white shadow-[0_0_30px_rgba(220,38,38,0.6)] animate-pulse scale-105'
+                          : 'bg-gradient-to-tr from-kumkum to-kumkum-dark text-white shadow-kumkum-glow active:scale-95'
+                      }`}
+                      aria-label={
+                        voiceStatus === 'listening'
+                          ? t('addExpense.stopListening')
+                          : t('addExpense.tapToSpeak')
+                      }
+                    >
+                      <Mic
+                        className={`w-10 h-10 ${
+                          voiceStatus === 'listening' ? 'animate-bounce' : ''
+                        }`}
+                      />
+                    </button>
+                  )}
+                </div>
+
+                {/* Live Transcript Display */}
+                {voiceTranscript && (
+                  <div className="w-full bg-cream rounded-2xl p-3 border border-[#EFEBE9] text-left">
+                    <span className="text-[11px] font-bold text-warmBrown-subtle uppercase">
+                      {t('addExpense.youSaid')}:
+                    </span>
+                    <p className="text-sm font-bold text-warmBrown mt-0.5">
+                      "{voiceTranscript}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Clarification Prompt (Needs Clarification from Amma) */}
+                {needsClarification && clarificationQuestion && (
+                  <div className="w-full bg-turmeric-light/80 border border-turmeric rounded-2xl p-4 text-left flex flex-col gap-3 animate-fade-in">
+                    <div className="flex items-start gap-2.5">
+                      <div className="p-2 bg-turmeric/20 rounded-xl text-lg flex-shrink-0">
+                        🤔
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-warmBrown uppercase tracking-wider">
+                          {t('addExpense.clarificationTitle')}
+                        </h4>
+                        <p className="text-sm font-bold text-warmBrown mt-1 leading-snug">
+                          {clarificationQuestion}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2 mt-1">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => startVoice()}
+                        icon={<Mic className="w-4 h-4" />}
+                      >
+                        {t('addExpense.replyWithVoice')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleTabChange('manual')}
+                        icon={<FileText className="w-4 h-4" />}
+                      >
+                        {t('addExpense.typeAnswer')}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Notice with Try Again & Manual fallback buttons */}
+                {voiceError && (
+                  <div className="w-full bg-red-50 border border-red-200 rounded-2xl p-4 text-left flex flex-col gap-3 animate-fade-in">
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-bold text-danger leading-relaxed">
+                          {voiceError}
+                        </p>
+                        <p className="text-[11px] text-warmBrown-subtle mt-0.5 font-medium">
+                          {t('addExpense.micFallbackTip')}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => startVoice()}
+                        icon={<RefreshCw className="w-4 h-4" />}
+                      >
+                        {t('addExpense.tryAgain')}
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleTabChange('manual')}
+                        icon={<FileText className="w-4 h-4" />}
+                      >
+                        {t('addExpense.typeManually')}
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
             </Card>
 
-            {/* Tamil/Tanglish Example Prompts */}
+            {/* Tamil / English Example Prompts */}
             <div className="bg-white/80 rounded-2xl p-3.5 border border-[#EFEBE9]">
               <span className="text-xs font-bold text-warmBrown block mb-2">
                 💡 {t('addExpense.exampleTitle')}
@@ -468,7 +623,10 @@ export const AddExpensePage: React.FC = () => {
 
             {/* Note/Description */}
             <Card variant="surface">
-              <label htmlFor="manual-note" className="text-xs font-bold text-warmBrown-subtle uppercase tracking-wider block mb-2">
+              <label
+                htmlFor="manual-note"
+                className="text-xs font-bold text-warmBrown-subtle uppercase tracking-wider block mb-2"
+              >
                 {t('addExpense.noteLabel')}
               </label>
               <input
@@ -489,7 +647,7 @@ export const AddExpensePage: React.FC = () => {
               disabled={manualAmount <= 0}
               icon={<Check className="w-5 h-5" />}
             >
-              {t('addExpense.save')}
+              {t('addExpense.saveExpense')}
             </Button>
           </div>
         )}
@@ -525,7 +683,7 @@ export const AddExpensePage: React.FC = () => {
                     disabled={isScanning}
                     icon={<Camera className="w-5 h-5" />}
                   >
-                    {isScanning ? t('addExpense.analyzing') : t('addExpense.takePhoto')}
+                    {isScanning ? t('addExpense.scanningSim') : t('addExpense.takePhoto')}
                   </Button>
                 </div>
               </div>

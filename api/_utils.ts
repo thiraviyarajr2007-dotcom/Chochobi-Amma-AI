@@ -23,6 +23,7 @@ export async function callGeminiStructured<T>(params: {
   systemPrompt: string;
   userPrompt: string;
   imageInlineData?: { mimeType: string; data: string };
+  inlineData?: { mimeType: string; data: string };
   schema: z.ZodType<T>;
   responseSchemaJson: Record<string, unknown>;
 }): Promise<T> {
@@ -36,9 +37,10 @@ export async function callGeminiStructured<T>(params: {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const parts: Array<Record<string, unknown>> = [];
-  if (params.imageInlineData) {
+  const media = params.inlineData || params.imageInlineData;
+  if (media) {
     parts.push({
-      inlineData: params.imageInlineData,
+      inlineData: media,
     });
   }
   parts.push({

@@ -181,3 +181,4 @@ export async function logOut(): Promise<void> {
   }
   localStorage.removeItem('chocobi_auth_user');
 }
+

@@ -61,3 +61,28 @@ export const MonthlyInsightsResponseSchema = z.object({
   }),
 });
 
+// 5. Voice Expense Input & Output Schemas (Audio Fallback)
+export const VoiceExpenseRequestSchema = z.object({
+  audioBase64: z.string().min(1, 'Audio base64 is required'),
+  mimeType: z.literal('audio/wav'),
+  lang: z.enum(['ta', 'en']).default('ta'),
+});
+export type VoiceExpenseRequest = z.infer<typeof VoiceExpenseRequestSchema>;
+
+export const VoiceExpenseItemSchema = z.object({
+  item: z.string(),
+  amount: z.number().positive(),
+  category: CategoryEnum,
+  confidence: z.number().min(0).max(1),
+});
+export type VoiceExpenseItem = z.infer<typeof VoiceExpenseItemSchema>;
+
+export const VoiceExpenseResponseSchema = z.object({
+  transcript: z.string(),
+  language: z.enum(['ta', 'en', 'mixed']),
+  expenses: z.array(VoiceExpenseItemSchema),
+  needsClarification: z.boolean(),
+  clarificationQuestion: z.string().optional(),
+});
+export type VoiceExpenseResponse = z.infer<typeof VoiceExpenseResponseSchema>;
+

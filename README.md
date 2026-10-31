@@ -67,6 +67,84 @@ flowchart TD
 
 ---
 
+## 🎙️ Voice Recognition & Fallback Architecture
+
+Voice expense entry in **Chocobi Amma AI** is architected to be 100% resilient across every mobile browser and device. Tamil mothers can effortlessly speak household expenses (*"இன்னைக்கு காய்கறி 250 ரூபாய், ஆட்டோ 80"* or *"Milk 60 rs"*), which are categorized into Indian household buckets with zero typing required.
+
+### Fallback Priority Waterfall
+
+1. **Tier 1 — Fast In-Browser Web Speech API (`SpeechRecognition`):**
+   - Configured with `lang = "ta-IN"` (or `"en-IN"` based on active language), `continuous = false`, `interimResults = true`.
+   - Displays live partial transcript while speaking.
+   - On completion, sends transcript to `/api/parse-expense` where Gemini 2.5 Flash extracts structured expenses.
+2. **Tier 2 — Automated Cloud Recorder Fallback (`MediaRecorder` + 16kHz PCM WAV):**
+   - Automatically engaged if `SpeechRecognition` is unsupported (e.g. non-Safari iOS browsers, unsupported Android webviews), throws network/service errors, or yields empty results twice.
+   - Users can also manually toggle mode via the **"Not working? Try recorder mode"** switch.
+   - Captures microphone audio using `navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })`.
+   - Displays a 15-second countdown ring, live audio level/waveform meter, and prominent Stop button.
+   - Converts the audio client-side to standard **16 kHz Mono 16-bit PCM WAV** (decoding via `AudioContext.decodeAudioData`, resampling via `OfflineAudioContext`, manual 44-byte RIFF header synthesis).
+   - Rejects audio under 0.7s with a gentle maternal notice (*"Audio was too short. Please speak a little longer Amma"*).
+   - Transmits WAV audio to `/api/voice-expense`, which calls Gemini 2.5 Flash to generate both the faithful transcript and structured items in a single call.
+   - If audio is unclear or silent, Gemini returns `needsClarification: true` with a maternal clarification question.
+3. **Tier 3 — Manual Entry Form:**
+   - Always accessible via the "Manual Entry" tab or from the error notice with zero data loss.
+
+### Voice Flow Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Mom as Tamil Mother (User)
+    participant UI as AddExpensePage (<AddTab>)
+    participant WS as Web Speech API (ta-IN)
+    participant MR as MediaRecorder & WAV Encoder
+    participant API as Vercel Serverless /api
+    participant Gemini as Google Gemini 2.5 Flash
+    participant DB as IndexedDB (ChocobiAmmaDB)
+
+    Mom->>UI: Tap Big Mic Button
+    alt Tier 1: Web Speech API Supported
+        UI->>WS: start() (ta-IN)
+        WS-->>UI: Live Interim Transcripts
+        WS-->>UI: Final Transcript
+        UI->>API: POST /api/parse-expense { transcript }
+        API->>Gemini: Parse text into structured expenses
+        Gemini-->>API: JSON expenses array
+        API-->>UI: { expenses: [...] }
+    else Tier 2: Web Speech Unsupported / Error / Fallback
+        UI->>UI: Switch to Cloud Recorder Mode
+        UI->>MR: getUserMedia() + MediaRecorder.start()
+        UI->>Mom: Show 15s Countdown Ring & Waveform Meter
+        Mom->>UI: Tap Stop Button (or 15s timeout)
+        MR->>UI: Raw WebM audio chunks
+        UI->>UI: Resample to 16kHz Mono 16-bit WAV (RIFF)
+        UI->>API: POST /api/voice-expense { audioBase64, mimeType: "audio/wav", lang }
+        API->>Gemini: Inline WAV audio + household parsing prompt
+        Gemini-->>API: { transcript, expenses, needsClarification }
+        API-->>UI: Structured Voice Expense Response
+    end
+
+    alt Needs Clarification
+        UI->>Mom: Mascot Thinking + Polite Question ("Reply with Voice" / "Type")
+    else Expenses Extracted
+        UI->>Mom: Confirmation Card (Edit Note, Amount, Category)
+        Mom->>UI: Review & Tap "Confirm & Save Expenses"
+        UI->>DB: db.expenses.add(records)
+        UI->>Mom: Success Toast + Navigate to /expenses (item highlighted)
+    end
+```
+
+### Known Browser Limitations & Mitigations
+
+| Platform / Browser | Limitation | Chocobi Amma AI Mitigation |
+|---|---|---|
+| **iOS Chrome / Firefox / Edge** | Apple restricts native `SpeechRecognition` to Safari on iOS; non-Safari browsers throw `service-not-allowed` or lack the API. | Automatically detects absence or error and seamlessly activates **Cloud Recorder mode** without failing. |
+| **Android In-App WebViews** | In-app browsers (e.g. WhatsApp, Facebook, Instagram) often silently block or revoke microphone permissions. | Surfaces friendly step-by-step permission instructions in Tamil/English alongside a one-tap **"Type Manually"** button. |
+| **Safari AudioContext Policy** | Web Audio API `AudioContext` requires a direct user gesture to transition from `suspended` to `running`. | Audio recording and decoding are strictly initiated within the user's tap handler on the Big Mic button. |
+| **Network Jitter / Offline** | Internet loss prevents cloud transcription or Gemini requests. | Persistent offline banners notify Mom, and offline regex parsers handle basic Tamil/English patterns locally. |
+
+---
+
 ## 🎨 Design System: "Pongal Warmth"
 
 Inspired by the cultural warmth of Tamil homes, festive Pongal celebrations, and strict WCAG 2.1 AA accessibility guidelines:
